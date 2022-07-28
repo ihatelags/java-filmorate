@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Slf4j
@@ -22,7 +24,7 @@ public class UserController {
 
     @GetMapping()
     public List<User> getAllUsers() {
-        return userService.getAllUsers();
+        return new ArrayList<>(userService.getAllUsers().values());
     }
 
     @GetMapping("/{id}")

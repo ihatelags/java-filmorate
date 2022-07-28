@@ -11,8 +11,8 @@ import java.util.*;
 public class InMemoryUserStorage implements UserStorage {
     private final HashMap<Long, User> users = new HashMap<>();
 
-    public List<User> getAllUsers() {
-        return new ArrayList<>(users.values());
+    public HashMap<Long, User> getAllUsers() {
+        return users;
     }
 
     public User createUser(User user) {

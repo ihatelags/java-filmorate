@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
@@ -45,7 +46,7 @@ public class FilmService {
 
     public Film getFilm(Long id) {
         Film film = filmStorage.getFilm(id);
-        validate(film);
+        validateFilmExists(id);
         return film;
     }
 
@@ -56,6 +57,7 @@ public class FilmService {
 
     public Film updateFilm(Film film) {
         validate(film);
+        validateFilmExists(film.getId());
         return filmStorage.updateFilm(film);
     }
 
@@ -72,10 +74,8 @@ public class FilmService {
     public Film deleteLike(Long id, Long userId) {
         Film film = filmStorage.getFilm(id);
         validate(film);
-        User user = userStorage.getUser(userId);
-        log.info("all users: " + userStorage.getAllUsers());
-        if (!userStorage.getAllUsers().contains(user)) {
-            throw new ValidationException(MessageFormat.format("Пользователь c id: {0} не существует", userId));
+        if (!userStorage.getAllUsers().containsKey(userId)) {
+            throw new NotFoundException(MessageFormat.format("Пользователь c id: {0} не существует", userId));
         }
         return filmStorage.removeLike(id, userId);
     }
@@ -102,5 +102,13 @@ public class FilmService {
         }
 
         log.info("Валидация фильма c ид={} пройдена успешно ", film.getId());
+    }
+
+    private void validateFilmExists(Long filmId) {
+        if (!filmStorage.getAllFilms().stream().map(Film::getId)
+                .collect(Collectors.toList()).contains(filmId)) {
+            log.error("Ошибка валидации фильма c ид={}", filmId);
+            throw new NotFoundException(MessageFormat.format("Фильм c id: {0} не существует", filmId));
+        }
     }
 }

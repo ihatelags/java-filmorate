@@ -3,12 +3,14 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.text.MessageFormat;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -23,19 +25,19 @@ public class UserService {
         this.userStorage = userStorage;
     }
 
-    public List<User> getAllUsers() {
+    public HashMap<Long, User> getAllUsers() {
         return userStorage.getAllUsers();
     }
 
     public User getUser(Long userId) {
         User user = userStorage.getUser(userId);
-        validate(user);
+        validateUserExists(userId);
         return user;
     }
 
     public User createUser(User user) {
         validate(user);
-        if (userStorage.getAllUsers().stream().anyMatch(u -> u.getEmail().equals(user.getEmail()))) {
+        if (userStorage.getAllUsers().values().stream().anyMatch(u -> u.getEmail().equals(user.getEmail()))) {
             log.error("Пользователь c ид={} уже существует. Неуникальная почта {}", user.getId(), user.getEmail());
             throw new ValidationException("Пользователь с почтой " + user.getEmail() + " уже существует");
         }
@@ -47,41 +49,32 @@ public class UserService {
 
     public User updateUser(User user) {
         validate(user);
-        if(!userStorage.getAllUsers().contains(user)){
-            log.error("Ошибка валидации пользователя c ид={}", user.getId());
-            throw new ValidationException(MessageFormat.format("Пользователь c id: {0} не существует", user.getId()));
-        }
+        validateUserExists(user.getId());
         userStorage.updateUser(user);
         return user;
     }
 
     public void addFriends(Long userId, Long friendId) {
-        User user = userStorage.getUser(userId);
-        User user2 = userStorage.getUser(friendId);
-        validate(user);
-        validate(user2);
+        validateUserExists(userId);
+        validateUserExists(friendId);
         userStorage.addFriends(userId, friendId);
     }
 
     public void removeFriends(Long userId, Long friendId) {
-        User user = userStorage.getUser(userId);
-        User user2 = userStorage.getUser(friendId);
-        validate(user);
-        validate(user2);
+        validateUserExists(userId);
+        validateUserExists(friendId);
         userStorage.removeFriends(userId, friendId);
     }
 
     public List<User> getFriends(Long userId) {
         User user = userStorage.getUser(userId);
-        validate(user);
+        validateUserExists(userId);
         return userStorage.getFriends(userId);
     }
 
     public List<User> getCommonFriends(long userId, long otherId) {
-        User user = userStorage.getUser(userId);
-        User user2 = userStorage.getUser(otherId);
-        validate(user);
-        validate(user2);
+        validateUserExists(userId);
+        validateUserExists(otherId);
         return userStorage.getCommonFriends(userId, otherId);
     }
 
@@ -108,5 +101,12 @@ public class UserService {
         }
 
         log.info("Валидация пользователя c ид={} пройдена успешно ", user.getId());
+    }
+
+    private void validateUserExists(Long userId) {
+        if (!userStorage.getAllUsers().containsKey(userId)) {
+            log.error("Ошибка валидации пользователя c ид={}", userId);
+            throw new NotFoundException(MessageFormat.format("Пользователь c id: {0} не существует", userId));
+        }
     }
 }

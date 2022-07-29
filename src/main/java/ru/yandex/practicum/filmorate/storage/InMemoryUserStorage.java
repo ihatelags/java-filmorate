@@ -2,17 +2,20 @@ package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
 
+import static java.util.stream.Collectors.toList;
+
 @Slf4j
 @Component
 public class InMemoryUserStorage implements UserStorage {
-    private final HashMap<Long, User> users = new HashMap<>();
+    private final Map<Long, User> users = new HashMap<>();
 
-    public HashMap<Long, User> getAllUsers() {
-        return users;
+    public List<User> getAllUsers() {
+        return new ArrayList<>(users.values());
     }
 
     public User createUser(User user) {
@@ -46,7 +49,7 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public List<User> getFriends(Long userId) {
-        HashSet<Long> friendIdSet = users.get(userId).getFriends();
+        HashSet<Long> friendIdSet = (HashSet<Long>) users.get(userId).getFriends();
         List<User> friendList = new ArrayList<>();
 
         for (Long friendId : friendIdSet) {
@@ -58,32 +61,23 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public List<User> getCommonFriends(Long id, Long otherId) {
-        List<User> commonFriends = new ArrayList<>();
-        HashSet<Long> friendsOfUser;
-        HashSet<Long> friendsOfAnotherUser;
-
-        if (id != null && otherId != null) {
-            friendsOfUser = users.get(id).getFriends();
-            friendsOfAnotherUser = users.get(otherId).getFriends();
-        } else {
-            return commonFriends;
+        User user = getUser(id);
+        User otherUser = getUser(otherId);
+        if (user == null || otherUser == null) {
+            String message = ("Пользователь не найден");
+            log.warn(message);
+            throw new NotFoundException(message);
         }
 
-        if (friendsOfUser == null) return commonFriends;
-
-        Set<Long> commonFriendsIds = new HashSet<>(friendsOfUser);
-        commonFriendsIds.retainAll(friendsOfAnotherUser);
-
-        for (Long commonFriendsId : commonFriendsIds) {
-            commonFriends.add(users.get(commonFriendsId));
-        }
-
-        return commonFriends;
+        return user.getFriends().stream()
+                .filter(otherUser.getFriends()::contains)
+                .map(users::get)
+                .collect(toList());
     }
 
     private User addFriend(Long userId, Long friendId) {
         User user = users.get(friendId);
-        HashSet<Long> friends = user.getFriends();
+        HashSet<Long> friends = (HashSet<Long>) user.getFriends();
 
         if (friends == null) {
             friends = new HashSet<>();
@@ -96,7 +90,7 @@ public class InMemoryUserStorage implements UserStorage {
 
     private User removeFriend(Long userId, Long friendId) {
         User user = users.get(friendId);
-        HashSet<Long> friends = user.getFriends();
+        HashSet<Long> friends = (HashSet<Long>) user.getFriends();
 
         if (friends != null) {
             friends.remove(userId);

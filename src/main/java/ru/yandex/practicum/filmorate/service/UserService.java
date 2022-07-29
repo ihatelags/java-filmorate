@@ -10,9 +10,9 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.text.MessageFormat;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -25,7 +25,7 @@ public class UserService {
         this.userStorage = userStorage;
     }
 
-    public HashMap<Long, User> getAllUsers() {
+    public List<User> getAllUsers() {
         return userStorage.getAllUsers();
     }
 
@@ -37,7 +37,7 @@ public class UserService {
 
     public User createUser(User user) {
         validate(user);
-        if (userStorage.getAllUsers().values().stream().anyMatch(u -> u.getEmail().equals(user.getEmail()))) {
+        if (userStorage.getAllUsers().stream().anyMatch(u -> u.getEmail().equals(user.getEmail()))) {
             log.error("Пользователь c ид={} уже существует. Неуникальная почта {}", user.getId(), user.getEmail());
             throw new ValidationException("Пользователь с почтой " + user.getEmail() + " уже существует");
         }
@@ -67,7 +67,6 @@ public class UserService {
     }
 
     public List<User> getFriends(Long userId) {
-        User user = userStorage.getUser(userId);
         validateUserExists(userId);
         return userStorage.getFriends(userId);
     }
@@ -104,7 +103,8 @@ public class UserService {
     }
 
     private void validateUserExists(Long userId) {
-        if (!userStorage.getAllUsers().containsKey(userId)) {
+        if (!userStorage.getAllUsers().stream().map(User::getId)
+                .collect(Collectors.toList()).contains(userId)) {
             log.error("Ошибка валидации пользователя c ид={}", userId);
             throw new NotFoundException(MessageFormat.format("Пользователь c id: {0} не существует", userId));
         }

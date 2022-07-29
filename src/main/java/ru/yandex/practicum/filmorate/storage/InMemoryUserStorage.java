@@ -68,12 +68,15 @@ public class InMemoryUserStorage implements UserStorage {
             log.warn(message);
             throw new NotFoundException(message);
         }
-
-        return user.getFriends().stream()
-                .filter(otherUser.getFriends()::contains)
-                .map(users::get)
-                .collect(toList());
-    }
+        try {
+            return user.getFriends().stream()
+                    .filter(otherUser.getFriends()::contains)
+                    .map(users::get)
+                    .collect(toList());
+        } catch (NullPointerException e) {
+            return new ArrayList<>();
+        }
+}
 
     private User addFriend(Long userId, Long friendId) {
         User user = users.get(friendId);

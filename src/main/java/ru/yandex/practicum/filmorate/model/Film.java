@@ -8,7 +8,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
-import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @Builder
@@ -23,7 +23,7 @@ public class Film {
     @Min(1)
     private int duration;
     @JsonIgnore
-    private HashSet<Long> likes;
+    private Set<Long> likes;
 
     public int countLikes() {
         if (likes == null) {

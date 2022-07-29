@@ -8,7 +8,7 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Past;
 import java.time.LocalDate;
-import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @Builder
@@ -22,5 +22,5 @@ public class User {
     @Past
     private LocalDate birthday;
     @JsonIgnore
-    private HashSet<Long> friends;
+    private Set<Long> friends;
 }

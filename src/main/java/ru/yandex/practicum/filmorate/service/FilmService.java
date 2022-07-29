@@ -14,7 +14,6 @@ import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -51,8 +50,7 @@ public class FilmService {
     }
 
     public List<Film> getPopularFilms(Integer count) {
-        List<Film> films = filmStorage.getPopularFilms(count);
-        return films.stream().limit(Objects.requireNonNullElse(count, 10)).collect(Collectors.toList());
+        return filmStorage.getPopularFilms(count);
     }
 
     public Film updateFilm(Film film) {
@@ -64,19 +62,14 @@ public class FilmService {
     public Film addLike(Long id, Long userId) {
         Film film = filmStorage.getFilm(id);
         validate(film);
-        User user = userStorage.getUser(userId);
-        if (user == null) {
-            throw new ValidationException(MessageFormat.format("Пользователь c id: {0} не существует", userId));
-        }
+        validateUserExists(userId);
         return filmStorage.addLike(id, userId);
     }
 
     public Film deleteLike(Long id, Long userId) {
         Film film = filmStorage.getFilm(id);
         validate(film);
-        if (!userStorage.getAllUsers().containsKey(userId)) {
-            throw new NotFoundException(MessageFormat.format("Пользователь c id: {0} не существует", userId));
-        }
+        validateUserExists(userId);
         return filmStorage.removeLike(id, userId);
     }
 
@@ -109,6 +102,14 @@ public class FilmService {
                 .collect(Collectors.toList()).contains(filmId)) {
             log.error("Ошибка валидации фильма c ид={}", filmId);
             throw new NotFoundException(MessageFormat.format("Фильм c id: {0} не существует", filmId));
+        }
+    }
+
+    private void validateUserExists(Long userId) {
+        if (!userStorage.getAllUsers().stream().map(User::getId)
+                .collect(Collectors.toList()).contains(userId)) {
+            log.error("Ошибка валидации пользователя c ид={}", userId);
+            throw new NotFoundException(MessageFormat.format("Пользователь c id: {0} не существует", userId));
         }
     }
 }

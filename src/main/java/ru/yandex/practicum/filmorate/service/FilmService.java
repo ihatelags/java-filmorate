@@ -11,8 +11,8 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.text.MessageFormat;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 @Slf4j
@@ -39,14 +39,13 @@ public class FilmService {
         if(film.getLikes() == null) {
             film.setLikes(new HashSet<>());
         }
-        filmStorage.setFilmGenre(film);
         return filmStorage.createFilm(film);
     }
 
     public Film getFilm(Long id) {
         Film film = filmStorage.getFilm(id);
         validateFilmExists(id);
-        film.setGenres(new ArrayList<>(filmStorage.loadFilmGenre(film)));
+        film.setGenres(new LinkedHashSet<>(filmStorage.loadFilmGenre(film)));
         return film;
     }
 
@@ -57,7 +56,6 @@ public class FilmService {
     public Film updateFilm(Film film) {
         validateFilmExists(film.getId());
         validate(film);
-        filmStorage.setFilmGenre(film);
         return filmStorage.updateFilm(film);
     }
 

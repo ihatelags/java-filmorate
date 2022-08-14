@@ -41,12 +41,8 @@ CREATE TABLE IF NOT EXISTS FILMS
 
 CREATE TABLE IF NOT EXISTS FILMS_GENRE
 (
-    FILM_ID BIGINT not null,
-    GENRE_ID BIGINT not null,
-    constraint FK_FILMS_GENRES_FILM_ID
-        foreign key (FILM_ID) references FILMS,
-    constraint FK_FILMS_GENRES_GENRE_ID
-        foreign key (GENRE_ID) references GENRES
+    FILM_ID BIGINT REFERENCES films(film_id),
+    GENRE_ID BIGINT REFERENCES genres(genre_id)
 );
 
 CREATE TABLE IF NOT EXISTS USERS

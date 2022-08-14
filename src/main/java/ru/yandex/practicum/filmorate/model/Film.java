@@ -8,7 +8,6 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -32,7 +31,7 @@ public class Film {
     private Set<Long> likes;
     private int rate;
     private MpaRating mpa;
-    private List<Genre> genres;
+    private Set<Genre> genres;
 
     public Film(long id, String name, String description, LocalDate releaseDate, int duration, HashSet<Long> likes, int rate, MpaRating mpa) {
         this.id = id;

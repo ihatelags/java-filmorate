@@ -37,7 +37,7 @@ public class DbFilmStorage implements FilmStorage{
             return null;
         }
         Film film = films.get(0);
-        film.setGenres(new ArrayList<>(loadFilmGenre(film)));
+        film.setGenres(new LinkedHashSet<>(loadFilmGenre(film)));
         return films.get(0);
     }
 
@@ -140,7 +140,7 @@ public class DbFilmStorage implements FilmStorage{
             return;
         }
         for (Genre genre : film.getGenres()) {
-            String sqlQuery = "INSERT INTO FILMS_GENRE (FILM_ID, GENRE_ID) values (?,?) ";
+            String sqlQuery = "INSERT INTO FILMS_GENRE (FILM_ID, GENRE_ID) values (?,?)";
             jdbcTemplate.update(sqlQuery, id, genre.getId());
         }
     }
@@ -160,8 +160,9 @@ public class DbFilmStorage implements FilmStorage{
                 "WHERE GENRE_ID IN (SELECT GENRE_ID " +
                 "FROM FILMS_GENRE " +
                 "WHERE FILM_ID = ?)";
-
-        return jdbcTemplate.query(sqlQuery, this::makeGenre, filmId);
+        List<Genre> genres = jdbcTemplate.query(sqlQuery, this::makeGenre, filmId);
+        genres.sort(Comparator.comparing(Genre::getId));
+        return genres;
     }
 
     public Genre getGenre(long id) {

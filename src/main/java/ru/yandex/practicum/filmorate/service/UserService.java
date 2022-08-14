@@ -12,7 +12,6 @@ import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -30,9 +29,8 @@ public class UserService {
     }
 
     public User getUser(Long userId) {
-        User user = userStorage.getUser(userId);
         validateUserExists(userId);
-        return user;
+        return userStorage.getUser(userId);
     }
 
     public User createUser(User user) {
@@ -48,8 +46,8 @@ public class UserService {
     }
 
     public User updateUser(User user) {
-        validate(user);
         validateUserExists(user.getId());
+        validate(user);
         userStorage.updateUser(user);
         return user;
     }
@@ -103,10 +101,14 @@ public class UserService {
     }
 
     private void validateUserExists(Long userId) {
-        if (!userStorage.getAllUsers().stream().map(User::getId)
-                .collect(Collectors.toList()).contains(userId)) {
-            log.error("Ошибка валидации пользователя c ид={}", userId);
+        try {
+            if (!userStorage.getAllUsers().contains(userStorage.getUser(userId))) {
+                log.error("Ошибка валидации пользователя c ид={}", userId);
+                throw new NotFoundException(MessageFormat.format("Пользователь c id: {0} не существует", userId));
+            }
+        } catch (IndexOutOfBoundsException e) {
             throw new NotFoundException(MessageFormat.format("Пользователь c id: {0} не существует", userId));
         }
+
     }
 }

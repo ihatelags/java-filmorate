@@ -6,15 +6,14 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.text.MessageFormat;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -40,12 +39,14 @@ public class FilmService {
         if(film.getLikes() == null) {
             film.setLikes(new HashSet<>());
         }
+        filmStorage.setFilmGenre(film);
         return filmStorage.createFilm(film);
     }
 
     public Film getFilm(Long id) {
         Film film = filmStorage.getFilm(id);
         validateFilmExists(id);
+        film.setGenres(new ArrayList<>(filmStorage.loadFilmGenre(film)));
         return film;
     }
 
@@ -54,23 +55,24 @@ public class FilmService {
     }
 
     public Film updateFilm(Film film) {
-        validate(film);
         validateFilmExists(film.getId());
+        validate(film);
+        filmStorage.setFilmGenre(film);
         return filmStorage.updateFilm(film);
     }
 
-    public Film addLike(Long id, Long userId) {
+    public void addLike(Long id, Long userId) {
         Film film = filmStorage.getFilm(id);
         validate(film);
         validateUserExists(userId);
-        return filmStorage.addLike(id, userId);
+        filmStorage.addLike(id, userId);
     }
 
-    public Film deleteLike(Long id, Long userId) {
+    public void deleteLike(Long id, Long userId) {
         Film film = filmStorage.getFilm(id);
         validate(film);
         validateUserExists(userId);
-        return filmStorage.removeLike(id, userId);
+        filmStorage.removeLike(id, userId);
     }
 
     private void validate(Film film) {
@@ -98,18 +100,25 @@ public class FilmService {
     }
 
     private void validateFilmExists(Long filmId) {
-        if (!filmStorage.getAllFilms().stream().map(Film::getId)
-                .collect(Collectors.toList()).contains(filmId)) {
-            log.error("Ошибка валидации фильма c ид={}", filmId);
+        try {
+            if (!filmStorage.getAllFilms().contains(filmStorage.getFilm(filmId))) {
+                log.error("Ошибка валидации фильма c ид={}", filmId);
+                throw new NotFoundException(MessageFormat.format("Фильм c id: {0} не существует", filmId));
+            }
+        } catch (IndexOutOfBoundsException e) {
             throw new NotFoundException(MessageFormat.format("Фильм c id: {0} не существует", filmId));
         }
     }
 
     private void validateUserExists(Long userId) {
-        if (!userStorage.getAllUsers().stream().map(User::getId)
-                .collect(Collectors.toList()).contains(userId)) {
-            log.error("Ошибка валидации пользователя c ид={}", userId);
+        try {
+            if (!userStorage.getAllUsers().contains(userStorage.getUser(userId))) {
+                log.error("Ошибка валидации пользователя c ид={}", userId);
+                throw new NotFoundException(MessageFormat.format("Пользователь c id: {0} не существует", userId));
+            }
+        } catch (IndexOutOfBoundsException e) {
             throw new NotFoundException(MessageFormat.format("Пользователь c id: {0} не существует", userId));
         }
+
     }
 }

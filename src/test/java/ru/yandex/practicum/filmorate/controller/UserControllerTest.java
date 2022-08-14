@@ -1,13 +1,15 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.DbUserStorage;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -17,8 +19,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class UserControllerTest {
-    private UserStorage userStorage;
+    private DbUserStorage userStorage;
     private UserService userService;
     private UserController userController;
     private User user;
@@ -42,7 +46,6 @@ public class UserControllerTest {
                 .friends(new HashSet<>())
                 .build();
 
-        userStorage = new InMemoryUserStorage();
         userService = new UserService(userStorage);
         userController = new UserController(userService);
         userController.createUser(user);

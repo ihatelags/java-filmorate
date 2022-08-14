@@ -1,8 +1,10 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
@@ -11,10 +13,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.DbFilmStorage;
+import ru.yandex.practicum.filmorate.storage.DbUserStorage;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -24,11 +24,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class FilmControllerTest {
-    private FilmStorage filmStorage;
+    private DbFilmStorage filmStorage;
     private FilmService filmService;
     private FilmController filmController;
-    private UserStorage userStorage;
+    private DbUserStorage userStorage;
     private UserService userService;
     private UserController userController;
     private Film film;
@@ -64,8 +66,6 @@ public class FilmControllerTest {
                 .friends(new HashSet<>())
                 .build();
 
-        filmStorage = new InMemoryFilmStorage();
-        userStorage = new InMemoryUserStorage();
         filmService = new FilmService(filmStorage, userStorage);
         userService = new UserService(userStorage);
 
@@ -131,8 +131,8 @@ public class FilmControllerTest {
 
     @Test
     void getPopularFilmTest() {
-        Film filmWithLike = filmController.addLike(film.getId(), user.getId());
+        filmController.addLike(film.getId(), user.getId());
         List<Film> popularFilmList = filmController.getPopularFilm(1);
-        assertEquals(popularFilmList.contains(filmWithLike), true);
+        assertEquals(popularFilmList.contains(film), true);
     }
 }

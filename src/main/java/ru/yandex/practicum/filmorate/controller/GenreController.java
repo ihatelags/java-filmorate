@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.storage.DbFilmStorage;
+import ru.yandex.practicum.filmorate.storage.GenreStorage;
 
 import java.util.List;
 
@@ -20,25 +20,25 @@ import java.util.List;
 public class GenreController {
     private static final Logger log = LoggerFactory.getLogger(GenreController.class);
 
-    private DbFilmStorage filmStorage;
+    private GenreStorage genreStorage;
 
     @Autowired
-    public GenreController(DbFilmStorage filmStorage) {
-        this.filmStorage = filmStorage;
+    public GenreController(GenreStorage genreStorage) {
+        this.genreStorage = genreStorage;
     }
 
     @GetMapping("/genres")
     public List<Genre> getAllGenres() {
-        log.debug("Общее количество жанров в справочнике : {}", filmStorage.getAllGenres().size());
-        return filmStorage.getAllGenres();
+        log.debug("Общее количество жанров в справочнике : {}", genreStorage.getAllGenres().size());
+        return genreStorage.getAllGenres();
     }
 
     @GetMapping("/genres/{genreId}")
     public Genre getGenreById(@PathVariable long genreId) {
-        if (genreId > 6 || genreId < 1) {
+        if (genreId < 1) {
             throw new NotFoundException("Genre with id=" + genreId + "not found");
         }
         log.debug("Get genre by id={}", genreId);
-        return filmStorage.getGenre(genreId);
+        return genreStorage.getGenre(genreId);
     }
 }

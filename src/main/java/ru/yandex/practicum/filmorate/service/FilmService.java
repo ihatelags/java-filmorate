@@ -7,12 +7,12 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.LikesStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 @Slf4j
@@ -20,13 +20,15 @@ import java.util.List;
 public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final LikesStorage likesStorage;
     private long nextId = 0;
     private final LocalDate MIN_DATE = LocalDate.of(1895, 12, 28);
 
     @Autowired
-    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
+    public FilmService(FilmStorage filmStorage, UserStorage userStorage, LikesStorage likesStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
+        this.likesStorage = likesStorage;
     }
 
     public List<Film> getAllFilms() {
@@ -45,7 +47,6 @@ public class FilmService {
     public Film getFilm(Long id) {
         Film film = filmStorage.getFilm(id);
         validateFilmExists(id);
-        film.setGenres(new LinkedHashSet<>(filmStorage.loadFilmGenre(film)));
         return film;
     }
 
@@ -63,14 +64,14 @@ public class FilmService {
         Film film = filmStorage.getFilm(id);
         validate(film);
         validateUserExists(userId);
-        filmStorage.addLike(id, userId);
+        likesStorage.addLike(id, userId);
     }
 
     public void deleteLike(Long id, Long userId) {
         Film film = filmStorage.getFilm(id);
         validate(film);
         validateUserExists(userId);
-        filmStorage.removeLike(id, userId);
+        likesStorage.removeLike(id, userId);
     }
 
     private void validate(Film film) {

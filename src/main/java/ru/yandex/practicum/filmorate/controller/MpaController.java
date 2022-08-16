@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.MpaRating;
-import ru.yandex.practicum.filmorate.storage.DbFilmStorage;
+import ru.yandex.practicum.filmorate.storage.MpaStorage;
 
 
 import java.util.List;
@@ -21,11 +21,11 @@ import java.util.List;
 public class MpaController {
     private static final Logger log = LoggerFactory.getLogger(MpaController.class);
 
-    private DbFilmStorage filmStorage;
+    private MpaStorage mpaStorage;
 
     @Autowired
-    public MpaController(DbFilmStorage filmStorage) {
-        this.filmStorage = filmStorage;
+    public MpaController(MpaStorage mpaStorage) {
+        this.mpaStorage = mpaStorage;
     }
 
     /**
@@ -33,20 +33,20 @@ public class MpaController {
      */
     @GetMapping("/mpa/{id}")
     public MpaRating getMpa(@PathVariable long id) {
-        if (id > 5 || id < 1) {
+        if (id < 1) {
             throw new NotFoundException("MPA with id=" + id + "not found");
         }
         log.debug("Get MPA by id={}", id);
-        return filmStorage.getMpa(id);
+        return mpaStorage.getMpa(id);
     }
 
     /**
      * получение списка всех рейтингов(MPA)
      */
     @GetMapping("/mpa")
-    public List<MpaRating> getAllpa() {
-        log.debug("Общее количество рейтингов MPA : {}", filmStorage.getAllMpa().size());
-        return filmStorage.getAllMpa();
+    public List<MpaRating> getAllMpa() {
+        log.debug("Общее количество рейтингов MPA : {}", mpaStorage.getAllMpa().size());
+        return mpaStorage.getAllMpa();
     }
 
 }

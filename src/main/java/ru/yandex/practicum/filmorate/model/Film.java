@@ -1,16 +1,21 @@
 package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@RequiredArgsConstructor
+@ToString
+@EqualsAndHashCode(of = "id")
 @Builder
 public class Film {
     private long id;
@@ -24,6 +29,20 @@ public class Film {
     private int duration;
     @JsonIgnore
     private Set<Long> likes;
+    private int rate;
+    private MpaRating mpa;
+    private Set<Genre> genres;
+
+    public Film(long id, String name, String description, LocalDate releaseDate, int duration, HashSet<Long> likes, int rate, MpaRating mpa) {
+        this.id = id;
+        this.name = name;
+        this.releaseDate = releaseDate;
+        this.description = description;
+        this.duration = duration;
+        this.likes = likes;
+        this.rate = rate;
+        this.mpa = mpa;
+    }
 
     public int countLikes() {
         if (likes == null) {

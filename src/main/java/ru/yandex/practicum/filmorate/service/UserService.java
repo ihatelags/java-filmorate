@@ -6,23 +6,25 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FriendStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class UserService {
     private Long nextId = 0L;
     private final UserStorage userStorage;
+    private final FriendStorage friendStorage;
 
     @Autowired
-    public UserService(UserStorage userStorage) {
+    public UserService(UserStorage userStorage, FriendStorage friendStorage) {
         this.userStorage = userStorage;
+        this.friendStorage = friendStorage;
     }
 
     public List<User> getAllUsers() {
@@ -30,9 +32,8 @@ public class UserService {
     }
 
     public User getUser(Long userId) {
-        User user = userStorage.getUser(userId);
         validateUserExists(userId);
-        return user;
+        return userStorage.getUser(userId);
     }
 
     public User createUser(User user) {
@@ -48,8 +49,8 @@ public class UserService {
     }
 
     public User updateUser(User user) {
-        validate(user);
         validateUserExists(user.getId());
+        validate(user);
         userStorage.updateUser(user);
         return user;
     }
@@ -57,24 +58,24 @@ public class UserService {
     public void addFriends(Long userId, Long friendId) {
         validateUserExists(userId);
         validateUserExists(friendId);
-        userStorage.addFriends(userId, friendId);
+        friendStorage.addFriends(userId, friendId);
     }
 
     public void removeFriends(Long userId, Long friendId) {
         validateUserExists(userId);
         validateUserExists(friendId);
-        userStorage.removeFriends(userId, friendId);
+        friendStorage.removeFriends(userId, friendId);
     }
 
     public List<User> getFriends(Long userId) {
         validateUserExists(userId);
-        return userStorage.getFriends(userId);
+        return friendStorage.getFriends(userId);
     }
 
     public List<User> getCommonFriends(long userId, long otherId) {
         validateUserExists(userId);
         validateUserExists(otherId);
-        return userStorage.getCommonFriends(userId, otherId);
+        return friendStorage.getCommonFriends(userId, otherId);
     }
 
      private void validate(User user) {
@@ -103,10 +104,14 @@ public class UserService {
     }
 
     private void validateUserExists(Long userId) {
-        if (!userStorage.getAllUsers().stream().map(User::getId)
-                .collect(Collectors.toList()).contains(userId)) {
-            log.error("Ошибка валидации пользователя c ид={}", userId);
+        try {
+            if (!userStorage.getAllUsers().contains(userStorage.getUser(userId))) {
+                log.error("Ошибка валидации пользователя c ид={}", userId);
+                throw new NotFoundException(MessageFormat.format("Пользователь c id: {0} не существует", userId));
+            }
+        } catch (IndexOutOfBoundsException e) {
             throw new NotFoundException(MessageFormat.format("Пользователь c id: {0} не существует", userId));
         }
+
     }
 }
